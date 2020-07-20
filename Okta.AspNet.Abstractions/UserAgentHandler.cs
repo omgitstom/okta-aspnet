@@ -4,20 +4,35 @@
 // </copyright>
 
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Okta.AspNet.Abstractions
 {
+    // TODO: consider renaming this class to OktaHttpMessageHandler, to clarify to future contributors the (expanding) responsibility of this class
     public class UserAgentHandler : DelegatingHandler
     {
-        private Lazy<string> _userAgent;
+        private readonly Lazy<string> _userAgent;
 
-        public UserAgentHandler(string frameworkName, Version frameworkversion)
+        public UserAgentHandler(string frameworkName, Version frameworkVersion, OktaWebOptions oktaWebOptions = null)
         {
-            InnerHandler = new HttpClientHandler();
-            _userAgent = new Lazy<string>(() => new UserAgentBuilder(frameworkName, frameworkversion).GetUserAgent());
+            _userAgent = new Lazy<string>(() => new UserAgentBuilder(frameworkName, frameworkVersion).GetUserAgent());
+            if (string.IsNullOrEmpty(oktaWebOptions?.ProxyAddress))
+            {
+                InnerHandler = new HttpClientHandler();
+            }
+            else
+            {
+                InnerHandler = new HttpClientHandler
+                {
+                    Proxy = new WebProxy
+                    {
+                        Address = new Uri(oktaWebOptions.ProxyAddress),
+                    },
+                };
+            }
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
