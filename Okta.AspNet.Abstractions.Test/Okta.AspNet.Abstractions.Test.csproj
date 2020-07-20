@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Okta.AspNet.Abstractions\Okta.AspNet.Abstractions.csproj" />
+    <ProjectReference Include="..\Okta.AspNet\Okta.AspNet.csproj" />
   </ItemGroup>
 
 </Project>

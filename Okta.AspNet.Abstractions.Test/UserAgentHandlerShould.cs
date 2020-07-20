@@ -4,6 +4,7 @@
 // </copyright>
 
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
@@ -35,6 +36,24 @@ namespace Okta.AspNet.Abstractions.Test
                 .IndexOf(
                     ProductInfoHeaderValue.Parse($"{frameworkName}/{version.Major}.{version.Minor}.{version.Build}")
                         .ToString(), StringComparison.InvariantCultureIgnoreCase).Should().BeGreaterOrEqualTo(0);
+        }
+
+        [Fact]
+        public async Task SetInnerHandlerWebProxy()
+        {
+            var testProxyAddress = "http://test.cxm";
+            var testFrameworkName = $"{nameof(SetInnerHandlerWebProxy)}_testFrameworkName";
+            var version = typeof(UserAgentHandlerShould).Assembly.GetName().Version;
+            var oktaHandler = new UserAgentHandler(testFrameworkName, version, new OktaMvcOptions { ProxyAddress = testProxyAddress });
+            oktaHandler.InnerHandler.Should().NotBeNull();
+            oktaHandler.InnerHandler.Should().BeAssignableTo<HttpClientHandler>();
+            
+            var httpClientHandler = (HttpClientHandler)oktaHandler.InnerHandler; 
+            httpClientHandler.Proxy.Should().NotBeNull();
+            httpClientHandler.Proxy.Should().BeAssignableTo<WebProxy>();
+            
+            var webProxy = (WebProxy)httpClientHandler.Proxy; 
+            webProxy.Address.Should().Be(testProxyAddress);
         }
     }
 }
